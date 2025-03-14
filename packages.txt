@@ -1,3 +1,4 @@
 unixodbc
 msodbcsql18
 mssql-tools
+echo 'ACCEPT_EULA=Y' | sudo tee -a /etc/environment
