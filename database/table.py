@@ -11,12 +11,12 @@ class BaseTable:
 
     def __init__(self):
         self.conn = init_connection()
-        if self.table_exists():
-            self.validate_schema()
+        if self._table_exists():
+            self._validate_schema()
         else:
-            self.create_table()
+            self._create_table()
 
-    def table_exists(self):
+    def _table_exists(self):
         query = f"""
             SELECT COUNT(*)
             FROM INFORMATION_SCHEMA.TABLES
@@ -28,7 +28,7 @@ class BaseTable:
             return True
         return False
 
-    def validate_schema(self):
+    def _validate_schema(self):
         query = f"""
             SELECT COLUMN_NAME, DATA_TYPE
             FROM INFORMATION_SCHEMA.COLUMNS
@@ -52,9 +52,13 @@ class BaseTable:
                     f"Expected {expected_data_type}, found {defined_data_type}"
                 )
 
-    def create_table(self):
+    def _create_table(self):
         column_definitions = [f"{column} {data_type}" for column, data_type in self.schema.items()]
         column_definitions = ", ".join(column_definitions)
 
         query = f"CREATE TABLE {self.name} ({column_definitions})"
+        execute_query(conn=self.conn, query=query, results=False)
+
+    def drop(self):
+        query = f"DROP TABLE {self.name}"
         execute_query(conn=self.conn, query=query, results=False)

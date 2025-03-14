@@ -5,13 +5,14 @@ from database.connection import list_tables
 st.write("test")
 
 class MyTable(BaseTable):
-    name = 'test2'
+    name = 'test'
     schema = {
         "id":"INT",
         "name":"NVARCHAR(200)"
     }
 
 my_table = MyTable()
+my_table.drop()
 tables = list_tables()
 print(tables)
 
