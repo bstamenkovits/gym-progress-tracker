@@ -1,4 +1,6 @@
-from database.connection import init_connection, execute_query
+import pandas as pd
+from database.connection import init_connection, execute_query, execute_many_query
+from typing import List, Dict, Any
 
 
 class SchemaError(Exception):
@@ -16,7 +18,7 @@ class BaseTable:
         else:
             self._create_table()
 
-    def _table_exists(self):
+    def _table_exists(self) -> bool:
         query = f"""
             SELECT COUNT(*)
             FROM INFORMATION_SCHEMA.TABLES
@@ -28,7 +30,7 @@ class BaseTable:
             return True
         return False
 
-    def _validate_schema(self):
+    def _validate_schema(self) -> None:
         query = f"""
             SELECT COLUMN_NAME, DATA_TYPE
             FROM INFORMATION_SCHEMA.COLUMNS
@@ -52,7 +54,7 @@ class BaseTable:
                     f"Expected {expected_data_type}, found {defined_data_type}"
                 )
 
-    def _create_table(self):
+    def _create_table(self) -> None:
         column_definitions = [f"{column} {data_type}" for column, data_type in self.schema.items()]
         column_definitions = ", ".join(column_definitions)
 
@@ -62,3 +64,36 @@ class BaseTable:
     def drop(self):
         query = f"DROP TABLE {self.name}"
         execute_query(conn=self.conn, query=query, results=False)
+
+    # def insert(self, columns, values)->None:
+    #     query = f""""
+    #         INSERT INTO {self.name} ({columns})
+    #         VALUES ({", ".join(["?" for _ in len(values)])})
+    #     """
+    #     execute_many_query(conn=self.conn, query=query, data=values)
+
+    def insert(self, data):
+        columns, values = [], []
+        for column, value in data.items():
+            columns.append(column)
+            values.append(value)
+
+        query = f"""
+            INSERT INTO {self.name} ({", ".join(columns)})
+            VALUES ({", ".join(["?" for _ in range(len(values))])})
+        """
+        execute_many_query(conn=self.conn, query=query, data=(values,))
+
+    def df(self, columns:List[str]=None, conditions:Dict[str, str]=None) -> pd.DataFrame:
+        columns = ", ".join(columns) if columns else "*"
+
+        if conditions:
+            values = list(conditions.values())
+            conditions = [f"{column} = ?" for column in conditions.keys()]
+            conditions = " AND ".join(conditions)
+        else:
+            values = None
+            conditions = ""
+
+        query = f"SELECT {columns} FROM {self.name} WHERE 1=1 {conditions}"
+        return pd.read_sql(sql=query, con=self.conn, params=values)

@@ -12,9 +12,11 @@ class MyTable(BaseTable):
     }
 
 my_table = MyTable()
-my_table.drop()
+
+my_table.insert({"id":1, "name":"john"})
 tables = list_tables()
-print(tables)
+
+st.write(my_table.df())
 
 
 

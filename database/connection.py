@@ -24,6 +24,11 @@ def execute_query(conn, query, results:bool=True):
         if results:
             return cur.fetchall()
 
+def execute_many_query(conn:Connection, query, data):
+    with conn.cursor() as cur:
+        print(query, data)
+        cur.executemany(query, data)
+
 def list_tables():
     query = """
         SELECT TABLE_NAME
