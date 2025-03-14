@@ -13,7 +13,7 @@ class MyTable(BaseTable):
 
 my_table = MyTable()
 
-my_table.insert({"id":1, "name":"john"})
+# my_table.insert({"id":1, "name":"john"})
 tables = list_tables()
 
 st.write(my_table.df())
